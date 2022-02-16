@@ -20,12 +20,12 @@ import (
 )
 
 func checkEmailParamsCheckMiddleware(c *gin.Context) {
-	recaptchaVersion := c.PostForm("recaptcha_version")
-	recaptchaToken := c.PostForm("recaptcha_token")
+//	recaptchaVersion := c.PostForm("recaptcha_version")
+//	recaptchaToken := c.PostForm("recaptcha_token")
 	oldToken := c.PostForm("old_token")
 	email := strings.ToLower(c.PostForm("email"))
 
-	if len(email) > 100 || len(oldToken) > 32 || len(recaptchaToken) > 2000 || len(recaptchaVersion) > 2 {
+	if len(email) > 100 || len(oldToken) > 32 {
 		base.HttpReturnWithCodeMinusOneAndAbort(c, logger.NewSimpleError("CheckEmailParamsOutOfBound", "Wrong Parameter", logger.WARN))
 		return
 	}
