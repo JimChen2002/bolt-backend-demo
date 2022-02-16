@@ -15,7 +15,6 @@ import (
 	"treehollow-v3-backend/pkg/consts"
 	"treehollow-v3-backend/pkg/logger"
 	"treehollow-v3-backend/pkg/mail"
-	"treehollow-v3-backend/pkg/route/contents"
 	"treehollow-v3-backend/pkg/utils"
 )
 
@@ -99,64 +98,6 @@ func checkEmailRateLimitVerificationCode(c *gin.Context) {
 	_, timeStamp, _, _ := base.GetVerificationCode(emailHash)
 	if now-timeStamp < 60 {
 		base.HttpReturnWithCodeMinusOneAndAbort(c, logger.NewSimpleError("TooMuchEmailInOneMinute", "Please wait 1 minute.", logger.INFO))
-		return
-	}
-	c.Next()
-}
-
-func checkEmailReCaptchaValidationMiddleware(c *gin.Context) {
-	recaptchaVersion := c.PostForm("recaptcha_version")
-	recaptchaToken := c.PostForm("recaptcha_token")
-	email := strings.ToLower(c.PostForm("email"))
-
-	if len(c.PostForm("recaptcha_token")) < 1 {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 3,
-		})
-		c.Abort()
-		return
-	}
-
-	context, err2 := contents.EmailLimiter.Get(c, c.ClientIP())
-	if err2 != nil {
-		base.HttpReturnWithCodeMinusOneAndAbort(c, logger.NewError(err2, "EmailLimiterFailed", consts.DatabaseReadFailedString))
-		return
-	}
-	if context.Reached {
-		base.HttpReturnWithCodeMinusOneAndAbort(c, logger.NewSimpleError("EmailLimiterReached"+c.ClientIP(), "You sent too much code today. Please try again tomorrow.", logger.WARN))
-		return
-	}
-
-	geoDb := utils.GeoDb.Get()
-	if geoDb != nil && len(viper.GetStringSlice("allowed_register_countries")) != 0 {
-		ip := net.ParseIP(c.ClientIP())
-		record, err5 := geoDb.Country(ip)
-		if err5 == nil {
-			country := record.Country.Names["zh-CN"]
-			if _, ok := utils.ContainsString(viper.GetStringSlice("allowed_register_countries"), country); !ok {
-				base.HttpReturnWithCodeMinusOneAndAbort(c, logger.NewSimpleError("RegisterNotAllowed"+c.ClientIP()+country+email, "Your country is not supported.", logger.WARN))
-				return
-			}
-		}
-	}
-
-	var captcha recaptcha.ReCAPTCHA
-	if recaptchaVersion == "v2" {
-		captcha, _ = recaptcha.NewReCAPTCHA(viper.GetString("recaptcha_v2_private_key"), recaptcha.V2, 10*time.Second)
-	} else {
-		captcha, _ = recaptcha.NewReCAPTCHA(viper.GetString("recaptcha_v3_private_key"), recaptcha.V3, 10*time.Second)
-	}
-	captcha.ReCAPTCHALink = "https://www.recaptcha.net/recaptcha/api/siteverify"
-	err := captcha.VerifyWithOptions(recaptchaToken, recaptcha.VerifyOption{
-		RemoteIP:  c.ClientIP(),
-		Threshold: float32(viper.GetFloat64("recaptcha_threshold")),
-	})
-	if err != nil {
-		log.Println("recaptcha server error", err, c.ClientIP(), email)
-		c.JSON(http.StatusOK, gin.H{
-			"code": 3,
-		})
-		c.Abort()
 		return
 	}
 	c.Next()

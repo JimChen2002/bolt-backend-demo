@@ -2,9 +2,6 @@ package security
 
 import (
 	"errors"
-//	"fmt"
-//	"github.com/ProtonMail/gopenpgp/v2/helper"
-//	"github.com/SSSaaS/sssa-golang"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"

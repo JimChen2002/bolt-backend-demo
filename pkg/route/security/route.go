@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 	"treehollow-v3-backend/pkg/base"
-	"treehollow-v3-backend/pkg/route/contents"
 	"treehollow-v3-backend/pkg/utils"
 )
 
@@ -23,11 +22,6 @@ func ApiListenHttp() {
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "TOKEN")
 	r.Use(cors.New(corsConfig))
-
-	contents.EmailLimiter = base.InitLimiter(limiter.Rate{
-		Period: 24 * time.Hour,
-		Limit:  viper.GetInt64("max_email_per_ip_per_day"),
-	}, "emailLimiter")
 
 	r.POST("/v3/security/login/check_email",
 		checkEmailParamsCheckMiddleware,
@@ -40,18 +34,9 @@ func ApiListenHttp() {
 		checkPhone)
 	r.POST("/v3/security/login/check_phone_code",
 		checkPhoneCode)
-	r.POST("/v3/security/login/check_email_invitation",
-		checkEmailParamsCheckMiddleware,
-		checkEmailRegexMiddleware,
-		checkEmailRateLimitVerificationCode,
-		checkEmailReCaptchaValidationMiddleware,
-		checkEmailInvitation)
-	r.POST("/v3/security/login/check_email_unregister",
-		checkEmailParamsCheckMiddleware,
-		checkAccountIsRegistered,
-		checkEmailRateLimitVerificationCode,
-		checkEmailReCaptchaValidationMiddleware,
-		unregisterEmail)
+
+	// code below is under development
+
 	r.POST("/v3/security/login/create_account",
 		loginParamsCheckMiddleware,
 		checkAccountNotRegistered,
@@ -62,13 +47,6 @@ func ApiListenHttp() {
 		checkAccountNotRegistered,
 		loginCheckIOSToken,
 		createAccountInvitation)
-	r.POST("/v3/security/login/login",
-		loginParamsCheckMiddleware,
-		checkAccountIsRegistered,
-		loginGetUserMiddleware,
-		loginCheckMaxDevices,
-		loginCheckIOSToken,
-		login)
 	r.POST("/v3/security/login/change_password",
 		checkAccountIsRegistered,
 		changePassword)

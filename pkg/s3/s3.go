@@ -59,7 +59,7 @@ func DogeCloudAPI(apiPath string, data map[string]interface{}, jsonMode bool) (r
 	resp, err := client.Do(req)
 	if err != nil {
 		return
-	} // 网络错误
+	} // Network Error
 	defer resp.Body.Close()
 	r, _ := ioutil.ReadAll(resp.Body)
 
