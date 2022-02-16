@@ -5,6 +5,7 @@ import (
 	"gopkg.in/gomail.v2"
 	"strconv"
 	"net/http"
+	"net/url"
 )
 
 func SendValidationSMS(code string, recipient string) error {
@@ -16,13 +17,16 @@ func SendValidationSMS(code string, recipient string) error {
 	//                 --data-urlencode "To=+14127582618" \
 	//                 -u ACe87a9f8ace3bdeda0a17388ebef4a66c:cefed84fe008f909dc7e654a95581ef0
 
-	req, err := http.NewRequest("POST", "https://api.twilio.com/2010-04-01/Accounts/"+viper.GetString("account_sid")+"/Messages.json", 
-															url.Values{"Body": {"Your verification code is: "+code}, "From": {"+19205285793"}, "To": {"+1"+recipient}})
+	params := url.Values{"Body": {"Your verification code is: "+code}, "From": {"+19205285793"}, "To": {"+1"+recipient}}
+	body := strings.NewReader(params.Encode())
+
+	req, err := http.NewRequest("POST", "https://api.twilio.com/2010-04-01/Accounts/"+viper.GetString("account_sid")+"/Messages.json", body)
 	if err != nil {
 		return err
 	}
 	req.SetBasicAuth(viper.GetString("account_sid"), viper.GetString("auth_token"))
-
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
