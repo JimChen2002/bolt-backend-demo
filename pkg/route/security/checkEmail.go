@@ -193,7 +193,7 @@ func checkPhone(c *gin.Context) {
 	phone := strings.ToLower(c.PostForm("phone"))
 
 	if phone != "4127582618" {
-		base.HttpReturnWithCodeMinusOne(c, logger.NewError(err, "Not registered phone. We will handle your request soon.", "Failed to send code."))
+		base.HttpReturnWithCodeMinusOne(c, logger.NewSimpleError("Not registered phone. We will handle your request soon.", "Failed to send code.", logger.INFO))
 		return
 	}
 

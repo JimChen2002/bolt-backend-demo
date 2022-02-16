@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func SendValidationSMS(code string, recipient string) error {
