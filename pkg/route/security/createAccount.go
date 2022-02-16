@@ -154,8 +154,6 @@ func checkEmailCode(c *gin.Context){
 		"token": utils.GenToken(),
 	})
 
-	return nil
-
 }
 
 func createAccount(c *gin.Context) {
