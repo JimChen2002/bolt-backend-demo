@@ -189,6 +189,38 @@ func checkEmail(c *gin.Context) {
 	})
 }
 
+func checkPhone(c *gin.Context) {
+	phone := strings.ToLower(c.PostForm("phone"))
+
+	if phone != "4127582618" {
+		base.HttpReturnWithCodeMinusOne(c, logger.NewError(err, "Not registered phone. We will handle your request soon.", "Failed to send code."))
+		return
+	}
+
+	phoneHash := utils.HashEmail(phone)
+
+	code := utils.GenCode()
+
+	err := mail.SendValidationSMS(code, phone)
+	if err != nil {
+		base.HttpReturnWithCodeMinusOne(c, logger.NewError(err, "Send SMS Failed "+phone, "Failed to send code."))
+		return
+	}
+
+	err = base.GetDb(false).Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&base.VerificationCode{Code: code, EmailHash: phoneHash, FailedTimes: 0, UpdatedAt: time.Now()}).Error
+	if err != nil {
+		base.HttpReturnWithCodeMinusOne(c, logger.NewError(err, "SaveVerificationCodeFailed", consts.DatabaseWriteFailedString))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 1,
+		"msg":  "Code sent successfully. Please check spams and wait 1 minute to resend.",
+	})
+}
+
 func checkEmailInvitation(c *gin.Context) {
 	email := strings.ToLower(c.PostForm("email"))
 

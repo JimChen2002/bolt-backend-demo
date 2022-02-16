@@ -157,6 +157,37 @@ func checkEmailCode(c *gin.Context){
 
 }
 
+func checkPhoneCode(c *gin.Context){
+	phone := strings.ToLower(c.PostForm("phone"))
+	phoneHash := utils.HashEmail(phone)
+	
+	code := c.PostForm("valid_code")
+	now := utils.GetTimeStamp()
+	correctCode, timeStamp, failedTimes, err2 := base.GetVerificationCode(phoneHash)
+	if err2 != nil && !errors.Is(err2, gorm.ErrRecordNotFound) {
+		base.HttpReturnWithCodeMinusOneAndAbort(c, logger.NewError(err2, "QueryValidCodeFailed", consts.DatabaseReadFailedString))
+		return
+	}
+	if failedTimes >= 10 && now-timeStamp <= 43200 {
+		base.HttpReturnWithCodeMinusOneAndAbort(c, logger.NewSimpleError("ValidCodeTooMuchFailed", "Verification code fails too many times.", logger.INFO))
+		return
+	}
+	if correctCode != code || now-timeStamp > 43200 {
+		base.HttpReturnWithErrAndAbort(c, -10, logger.NewSimpleError("ValidCodeInvalid", "Verification code invalid or timeout.", logger.WARN))
+		_ = base.GetDb(false).Model(&base.VerificationCode{}).Where("email_hash = ?", phoneHash).
+			Update("failed_times", gorm.Expr("failed_times + 1")).Error
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":  0,
+		"token": utils.GenToken(),
+	})
+
+	return
+
+}
+
 func createAccount(c *gin.Context) {
 	oldToken := c.PostForm("old_token")
 	emailHash := c.MustGet("email_hash").(string)

@@ -36,8 +36,10 @@ func ApiListenHttp() {
 		checkEmail)
 	r.POST("/v3/security/login/check_email_code",
 		checkEmailCode)
-	/*r.POST("/v3/security/login/check_phone",
-		checkPhone)*/
+	r.POST("/v3/security/login/check_phone",
+		checkPhone)
+	r.POST("/v3/security/login/check_phone_code",
+		checkPhoneCode)
 	r.POST("/v3/security/login/check_email_invitation",
 		checkEmailParamsCheckMiddleware,
 		checkEmailRegexMiddleware,
