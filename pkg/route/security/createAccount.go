@@ -127,7 +127,6 @@ func createDevice(c *gin.Context, user *base.User, pwHashed string, tx *gorm.DB)
 }
 
 func checkEmailCode(c *gin.Context){
-	oldToken := c.PostForm("old_token")
 	email := strings.ToLower(c.PostForm("email"))
 	emailHash := utils.HashEmail(email)
 	
